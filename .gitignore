@@ -1,0 +1,45 @@
+# ===== Logs =====
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===== Node =====
+node_modules
+dist
+dist-ssr
+*.local
+
+# ===== Rust / Tauri =====
+src-tauri/target
+target
+Cargo.lock
+
+# ↑ライブラリなら無視、アプリなら残すでもOK
+# Tauriアプリなら基本は残してもいい
+# →迷うなら一旦コミットしてOK
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Editor =====
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===== Tauri build artifacts =====
+src-tauri/binaries
+src-tauri/.cargo
+
+# ===== Env =====
+.env
+.env.*

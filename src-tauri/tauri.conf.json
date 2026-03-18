@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "monitor-ddc-controller",
+  "version": "0.1.0",
+  "identifier": "com.monitor-ddc-controller.app",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "monitor-ddc-controller",
+        "width": 800,
+        "height": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/tauri_example/32x32.png",
+      "icons/tauri_example/128x128.png",
+      "icons/tauri_example/128x128@2x.png",
+      "icons/tauri_example/icon.icns",
+      "icons/tauri_example/icon.ico"
+    ]
+  }
+}
