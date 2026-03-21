@@ -17,10 +17,8 @@ dist-ssr
 src-tauri/target
 target
 Cargo.lock
-
-# ↑ライブラリなら無視、アプリなら残すでもOK
-# Tauriアプリなら基本は残してもいい
-# →迷うなら一旦コミットしてOK
+bin
+memo.txt
 
 # ===== OS =====
 .DS_Store

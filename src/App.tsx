@@ -1,51 +1,110 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { useEffect, useState } from "react";
+import {
+  getMonitors,
+  toGetMonitorsError,
+  type GetMonitorsError,
+  type GetMonitorsResponse,
+  type MonitorIdentity,
+} from "./api/monitorApi";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [data, setData] = useState<GetMonitorsResponse | null>(null);
+  const [error, setError] = useState<GetMonitorsError | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      setLoading(true);
+      setData(null);
+      setError(null);
+
+      try {
+        const result = await getMonitors();
+
+        if (!cancelled) {
+          setData(result);
+        }
+      } catch (e: unknown) {
+        if (!cancelled) {
+          setError(toGetMonitorsError(e));
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <main style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <h1>Monitor List</h1>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+      {loading && <p>loading...</p>}
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+      {error?.type === "MonitorsNotFound" && (
+        <p style={{ color: "red" }}>モニタが見つかりませんでした。</p>
+      )}
+
+      {error?.type === "Unavailable" && (
+        <p style={{ color: "red" }}>モニタ取得に失敗しました。</p>
+      )}
+
+      {error?.type === "TransportError" && (
+        <p style={{ color: "red" }}>
+          接続エラー: {error.message}
+        </p>
+      )}
+
+      {data && (
+        <ul>
+          {data.monitors.map((monitor, index) => (
+            <li key={monitor.monitor_id}>
+              {index + 1}: {toMonitorLabel(monitor)}
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
+}
+
+function toMonitorLabel(monitor: MonitorIdentity): string {
+  const friendlyName = normalizeNullableString(monitor.friendly_name);
+  if (friendlyName) {
+    return friendlyName;
+  }
+
+  if (monitor.edid) {
+    const vendor = normalizeNullableString(monitor.edid.vendor);
+    const productId = monitor.edid.product_id
+      .toString(16)
+      .toUpperCase()
+      .padStart(4, "0");
+
+    if (vendor) {
+      return `${vendor}-${productId}`;
+    }
+
+    return `Unknown-${productId}`;
+  }
+
+  return "不明なモニタ";
+}
+
+function normalizeNullableString(value: string | null | undefined): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 export default App;
