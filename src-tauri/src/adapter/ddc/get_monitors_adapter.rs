@@ -1,24 +1,37 @@
 use std::collections::HashSet;
+use std::sync::Arc;
 
 use crate::application::monitor::get_monitors::{
     DdcDiscoveredMonitor,
     GetDdcMonitorsPort,
     GetMonitorsPortError,
 };
-use crate::infra::winapi::ddc::api::list_physical_monitor_infos;
 
-pub struct DdcGetMonitorsAdapter;
+use super::ports::{
+    DdcPlatformPort,
+    DdcPlatformPortError,
+};
+
+
+
+pub struct DdcGetMonitorsAdapter {
+    platform_port: Arc<dyn DdcPlatformPort>,
+}
+
 
 impl DdcGetMonitorsAdapter {
-    pub fn new() -> Self {
-        Self
+    pub fn new(platform_port: Arc<dyn DdcPlatformPort>) -> Self {
+        Self { platform_port }
     }
 }
 
+
 impl GetDdcMonitorsPort for DdcGetMonitorsAdapter {
     fn get_ddc_monitors(&self) -> Result<Vec<DdcDiscoveredMonitor>, GetMonitorsPortError> {
-        let infos = list_physical_monitor_infos()
-            .map_err(|_| GetMonitorsPortError::BackendUnavailable)?;
+        let infos = self
+            .platform_port
+            .list_ddc_monitors()
+            .map_err(map_platform_error)?;
 
         if infos.is_empty() {
             return Err(GetMonitorsPortError::MonitorsNotFound);
@@ -28,7 +41,7 @@ impl GetDdcMonitorsPort for DdcGetMonitorsAdapter {
         let mut monitors = Vec::<DdcDiscoveredMonitor>::new();
 
         for info in infos {
-            let logical_name = normalize_required_string(info.device_name);
+            let logical_name = normalize_required_string(info.logical_name);
             if logical_name.is_empty() {
                 continue;
             }
@@ -53,11 +66,20 @@ impl GetDdcMonitorsPort for DdcGetMonitorsAdapter {
     }
 }
 
+
+fn map_platform_error(err: DdcPlatformPortError) -> GetMonitorsPortError {
+    match err {
+        DdcPlatformPortError::Unavailable => GetMonitorsPortError::BackendUnavailable,
+    }
+}
+
+
 fn normalize_optional_string(value: Option<String>) -> Option<String> {
     value
         .map(|v| v.trim().to_owned())
         .filter(|v| !v.is_empty())
 }
+
 
 fn normalize_required_string(value: String) -> String {
     value.trim().to_owned()

@@ -1,4 +1,4 @@
-use crate::infra::winapi::ddc::error::CapabilitiesParseError;
+use crate::infra::winapi::ddc::sys::error::CapabilitiesParseError;
 
 use std::collections::{HashMap, HashSet};
 
