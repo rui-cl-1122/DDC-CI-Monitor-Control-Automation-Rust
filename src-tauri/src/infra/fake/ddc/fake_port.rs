@@ -4,7 +4,7 @@ use crate::adapter::ddc::ports::{
     PlatformDdcMonitor,
 };
 
-use super::fake_monitor_data::{
+use crate::infra::fake::common::fake_monitor_data::{
     display1_ddc_monitor,
     display2_ddc_monitor,
 };
@@ -65,9 +65,9 @@ impl DdcPlatformPort for FakeDdcPlatformPort {
 
                 Ok(vec![monitor1, monitor2])
             }
-            
+
             DdcFakeScenario::NoMonitors => Ok(vec![]),
-            
+
             DdcFakeScenario::BackendUnavailable => {
                 Err(DdcPlatformPortError::Unavailable)
             }

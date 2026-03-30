@@ -1,7 +1,7 @@
 #![cfg(windows)]
 
-use crate::infra::winapi::edid::api::{BasicEdidFields, EdidInfo, DISPLAYCONFIG_PATH_INFO};
-use crate::infra::winapi::edid::error::{EdidError, Result};
+use crate::infra::winapi::edid::sys::api::{BasicEdidFields, EdidInfo, DISPLAYCONFIG_PATH_INFO};
+use crate::infra::winapi::edid::sys::error::{EdidError, Result};
 
 use std::ffi::OsString;
 use std::mem::{size_of, zeroed};
