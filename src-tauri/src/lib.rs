@@ -4,12 +4,12 @@ pub mod application;
 pub mod bootstrap;
 pub mod presentation;
 
-use bootstrap::container::build_app_container;
+use bootstrap::container::build_container;
 use presentation::gui::tauri::commands::get_monitors_command;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let app_container = build_app_container();
+    let app_container = build_container();
 
     tauri::Builder::default()
         .manage(app_container)

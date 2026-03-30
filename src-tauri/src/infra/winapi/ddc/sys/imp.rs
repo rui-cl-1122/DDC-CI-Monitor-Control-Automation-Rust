@@ -1,13 +1,13 @@
 #![cfg(windows)]
 
-use crate::infra::winapi::ddc::api::{
+use crate::infra::winapi::ddc::sys::api::{
     CapabilitiesInfo,
     HMONITOR,
     PhysicalMonitorInfo,
     VcpFeature,
 };
-use crate::infra::winapi::ddc::caps_parse::parse_capabilities;
-use crate::infra::winapi::ddc::error::{DdcError, Result};
+use crate::infra::winapi::ddc::sys::caps_parse::parse_capabilities;
+use crate::infra::winapi::ddc::sys::error::{DdcError, Result};
 
 use std::collections::{HashMap, HashSet};
 use std::ffi::OsString;

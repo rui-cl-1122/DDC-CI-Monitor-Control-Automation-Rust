@@ -1,45 +1,38 @@
-use crate::adapter::common::fake_monitor_data::{
+use crate::adapter::ddc::ports::{
+    DdcPlatformPort,
+    DdcPlatformPortError,
+    PlatformDdcMonitor,
+};
+
+use crate::infra::fake::common::fake_monitor_data::{
     display1_ddc_monitor,
     display2_ddc_monitor,
 };
-use crate::application::monitor::get_monitors::{
-    DdcDiscoveredMonitor,
-    GetDdcMonitorsPort,
-    GetMonitorsPortError,
-};
-
-
-// シナリオを1つ有効にして実行
-
-//const DDC_FAKE_SCENARIO: DdcFakeScenario = DdcFakeScenario::Success;
-const DDC_FAKE_SCENARIO: DdcFakeScenario = DdcFakeScenario::FriendlyNameMissingOnDisplay1;
-// const DDC_FAKE_SCENARIO: DdcFakeScenario = DdcFakeScenario::FriendlyNameMissingOnDisplay2;
-// const DDC_FAKE_SCENARIO: DdcFakeScenario = DdcFakeScenario::FriendlyNameMissingOnBoth;
-// const DDC_FAKE_SCENARIO: DdcFakeScenario = DdcFakeScenario::MonitorsNotFound;
-// const DDC_FAKE_SCENARIO: DdcFakeScenario = DdcFakeScenario::BackendUnavailable;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum DdcFakeScenario {
+pub enum DdcFakeScenario {
     Success,
     FriendlyNameMissingOnDisplay1,
     FriendlyNameMissingOnDisplay2,
     FriendlyNameMissingOnBoth,
-    MonitorsNotFound,
+    NoMonitors,
     BackendUnavailable,
 }
 
-pub struct FakeDdcGetMonitorsAdapter;
+pub struct FakeDdcPlatformPort {
+    scenario: DdcFakeScenario,
+}
 
-impl FakeDdcGetMonitorsAdapter {
-    pub fn new() -> Self {
-        Self
+impl FakeDdcPlatformPort {
+    pub fn new(scenario: DdcFakeScenario) -> Self {
+        Self { scenario }
     }
 }
 
-impl GetDdcMonitorsPort for FakeDdcGetMonitorsAdapter {
-    fn get_ddc_monitors(&self) -> Result<Vec<DdcDiscoveredMonitor>, GetMonitorsPortError> {
-        match DDC_FAKE_SCENARIO {
+impl DdcPlatformPort for FakeDdcPlatformPort {
+    fn list_ddc_monitors(&self) -> Result<Vec<PlatformDdcMonitor>, DdcPlatformPortError> {
+        match self.scenario {
             DdcFakeScenario::Success => Ok(vec![
                 display1_ddc_monitor(),
                 display2_ddc_monitor(),
@@ -73,9 +66,11 @@ impl GetDdcMonitorsPort for FakeDdcGetMonitorsAdapter {
                 Ok(vec![monitor1, monitor2])
             }
 
-            DdcFakeScenario::MonitorsNotFound => Err(GetMonitorsPortError::MonitorsNotFound),
+            DdcFakeScenario::NoMonitors => Ok(vec![]),
 
-            DdcFakeScenario::BackendUnavailable => Err(GetMonitorsPortError::BackendUnavailable),
+            DdcFakeScenario::BackendUnavailable => {
+                Err(DdcPlatformPortError::Unavailable)
+            }
         }
     }
 }

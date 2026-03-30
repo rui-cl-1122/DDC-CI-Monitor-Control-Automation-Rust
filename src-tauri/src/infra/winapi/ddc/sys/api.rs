@@ -1,7 +1,7 @@
 #![cfg(windows)]
 
-use crate::infra::winapi::ddc::caps_parse::CapabilitiesParsed;
-use crate::infra::winapi::ddc::error::Result;
+use crate::infra::winapi::ddc::sys::caps_parse::CapabilitiesParsed;
+use crate::infra::winapi::ddc::sys::error::Result;
 
 use std::collections::HashMap;
 

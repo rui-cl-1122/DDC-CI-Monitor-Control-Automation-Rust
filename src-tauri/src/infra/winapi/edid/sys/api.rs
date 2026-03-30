@@ -1,6 +1,6 @@
 #![cfg(windows)]
 
-use crate::infra::winapi::edid::error::Result;
+use crate::infra::winapi::edid::sys::error::Result;
 
 pub use windows_sys::Win32::Devices::Display::DISPLAYCONFIG_PATH_INFO;
 

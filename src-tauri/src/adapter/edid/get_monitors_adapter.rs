@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::sync::Arc;
 
 use crate::application::monitor::get_monitors::{
     DiscoveredEdid,
@@ -6,20 +7,32 @@ use crate::application::monitor::get_monitors::{
     GetEdidMonitorsPort,
     GetMonitorsPortError,
 };
-use crate::infra::winapi::edid::api::list_edid_infos;
 
-pub struct EdidGetMonitorsAdapter;
+use super::ports::{
+    EdidPlatformPort,
+    EdidPlatformPortError,
+};
+
+
+
+pub struct EdidGetMonitorsAdapter {
+    platform_port: Arc<dyn EdidPlatformPort>,
+}
 
 impl EdidGetMonitorsAdapter {
-    pub fn new() -> Self {
-        Self
+    pub fn new(platform_port: Arc<dyn EdidPlatformPort>) -> Self {
+        Self { platform_port }
     }
 }
 
+
+
 impl GetEdidMonitorsPort for EdidGetMonitorsAdapter {
     fn get_edid_monitors(&self) -> Result<Vec<EdidDiscoveredMonitor>, GetMonitorsPortError> {
-        let infos = list_edid_infos()
-            .map_err(|_| GetMonitorsPortError::BackendUnavailable)?;
+        let infos = self
+            .platform_port
+            .list_edid_monitors()
+            .map_err(map_platform_error)?;
 
         if infos.is_empty() {
             return Err(GetMonitorsPortError::MonitorsNotFound);
@@ -38,17 +51,15 @@ impl GetEdidMonitorsPort for EdidGetMonitorsAdapter {
                 continue;
             }
 
-            let parsed = info.parsed;
-
             monitors.push(EdidDiscoveredMonitor {
                 logical_name,
                 edid: DiscoveredEdid {
-                    identifier: normalize_required_string(parsed.identifier),
-                    vendor: normalize_required_string(parsed.vendor),
-                    product_id: parsed.product_id,
-                    serial: parsed.serial,
-                    week: parsed.week,
-                    year: parsed.year,
+                    identifier: normalize_required_string(info.edid.identifier),
+                    vendor: normalize_required_string(info.edid.vendor),
+                    product_id: info.edid.product_id,
+                    serial: info.edid.serial,
+                    week: info.edid.week,
+                    year: info.edid.year,
                 },
             });
         }
@@ -60,6 +71,14 @@ impl GetEdidMonitorsPort for EdidGetMonitorsAdapter {
         Ok(monitors)
     }
 }
+
+
+fn map_platform_error(err: EdidPlatformPortError) -> GetMonitorsPortError {
+    match err {
+        EdidPlatformPortError::Unavailable => GetMonitorsPortError::BackendUnavailable,
+    }
+}
+
 
 fn normalize_required_string(value: String) -> String {
     value.trim().to_owned()
